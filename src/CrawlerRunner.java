@@ -18,8 +18,11 @@ public class CrawlerRunner {
 		Options options = new Options();
 		options.addOption("r", false, "craw R");
 		options.addOption("e", false, "craw RE");
+		options.addOption("w", true, "webset");
+		options.addOption("t", true, "get json time");
 		options.addOption("h", false, "Lists short help");
-
+		
+		int prd = 18000;
 		CommandLineParser parser = new PosixParser();
 		try {
 			Timer tm = new Timer();
@@ -39,14 +42,18 @@ public class CrawlerRunner {
 				System.err.println("Parameter Error");
 				System.exit(1);
 			}
-
-			boolean rst = cr.login("cc777", "000000");
+			
+			if(cmd.hasOption("t"))
+				prd = Integer.parseInt(cmd.getOptionValue("t")) * 1000;
+			System.out.println(prd);
+			
+			boolean rst = cr.login("cc777", "000000", cmd.getOptionValue("w"));
 			if (rst == true)
 				System.out.println("Login Success");
 			else
 				System.exit(1);
 
-			tm.schedule(mytsk, 1000, 5000);
+			tm.schedule(mytsk, 1000, prd);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -81,16 +88,28 @@ class myTask extends TimerTask {
 			x = cr.crawREJson();
 
 		FileWriter fw;
-		try {
-			fw = new FileWriter("output/" + target + "_"
-					+ df.format(new Date()), true);
-			fw.write(x + "\n");
-			fw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(x.indexOf("<html>") != -1){
+			try {
+				cr.reLogin();
+			} catch (ClientProtocolException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}else{
+			try {
+				fw = new FileWriter("output/" + target + "_"
+						+ df.format(new Date()), true);
+				fw.write(x + "\n\n");
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("Json is " + x.substring(0, 40) + "...");
 		}
-		System.out.println("Json is " + x.substring(0, 40) + "...");
 	}
 
 }

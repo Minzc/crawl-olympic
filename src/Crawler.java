@@ -18,11 +18,15 @@ import org.apache.http.util.EntityUtils;
 
 public class Crawler {
 	private DefaultHttpClient client = null;
-
-	public boolean login(String u, String p) throws ClientProtocolException,
+	private String base = null;
+	private String username = null;
+	private String password = null;
+	public boolean login(String u, String p, String wbset) throws ClientProtocolException,
 			IOException {
+		username = u;
+		password = p;
 		client = new DefaultHttpClient();
-		String base = "http://bb99123.com";
+		base = wbset;
 		HttpPost postmethod = new HttpPost(base
 				+ "/index.php?Controller=Users&action=FLogin");
 		client.getParams().setParameter("http.protocol.cookie-policy",
@@ -62,17 +66,22 @@ public class Crawler {
 		}
 
 	}
-
+	public void reLogin() throws ClientProtocolException, IOException{
+		System.out.println("ReLogin");
+		login(username,password,base);
+	}
 	public String crawRJson() {
 		System.out.println("Start Getting Json(F/R)...");
 		String x = null;
 		try {
 			HttpGet getmethod = new HttpGet(
-					"http://b.bb99123.com/index.php?Controller=Show&action=GetData&bet_type=R&global_type=F");
+					base + "/index.php?Controller=Show&action=GetData&bet_type=R&global_type=F");
 			HttpResponse response = client.execute(getmethod);
-			if (response.getStatusLine().getStatusCode() != 200)
-				throw new Exception("Status Code Is "
-						+ response.getStatusLine().getStatusCode());
+			if (response.getStatusLine().getStatusCode() != 200){
+				System.out.println("ReLogin");
+				reLogin();
+			}
+				
 			x = EntityUtils.toString(response.getEntity());
 		} catch (Exception e) {
 			System.out.println("Error When Getting Json");
@@ -87,9 +96,13 @@ public class Crawler {
 		System.out.println("Start Getting Json(F/RE)...");
 		try {
 			HttpGet getmethod = new HttpGet(
-					"http://b.bb99123.com/index.php?Controller=Show&action=GetData&bet_type=RE&global_type=F");
+					base + "/index.php?Controller=Show&action=GetData&bet_type=RE&global_type=F");
 			HttpResponse response = client.execute(getmethod);
 			x = EntityUtils.toString(response.getEntity());
+			if (response.getStatusLine().getStatusCode() != 200){
+				System.out.println("ReLogin");
+				reLogin();
+			}
 		} catch (Exception e) {
 			System.out.println("Error When Getting Json");
 			System.out.println(e);
